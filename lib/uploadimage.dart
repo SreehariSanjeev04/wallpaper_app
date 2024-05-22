@@ -1,12 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:project/wallpaper.dart';
 import 'dart:io';
-import 'firebase_options.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+
 class UploadImage extends StatefulWidget {
   const UploadImage({Key? key}) : super(key: key);
 
@@ -15,45 +14,45 @@ class UploadImage extends StatefulWidget {
 }
 
 class _UploadImageState extends State<UploadImage> {
-  CollectionReference _reference =
+  final CollectionReference _reference =
       FirebaseFirestore.instance.collection('wallpaper_info');
   String? dropDownSelection = '';
   String downloadURL = '';
   final items = ['Select', 'Wildlife', 'Food', 'Travel'];
   String? value;
+  List<String> displayImages = [];
   final _titleController = TextEditingController();
   GlobalKey<FormState> key = GlobalKey();
-
   @override
   void initState() {
     super.initState();
-    value = items.first; // Initialize value to the first item in the list
+    value = items.first;
   }
 
   @override
   Widget build(BuildContext context) {
-    String displayURL =
-        'https://t3.ftcdn.net/jpg/02/43/51/48/360_F_243514868_XDIMJHNNJYKLRST05XnnTj0MBpC4hdT5.jpg';
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
-        leading: IconButton(onPressed: (){
-          Navigator.of(context).pop(context); 
-        },icon: Icon(Icons.arrow_back_ios_new),tooltip: 'Back',),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).pop(context);
+          },
+          icon: const Icon(Icons.arrow_back_ios_new),
+          tooltip: 'Back',
+        ),
         title: const Text(
           'Add Wallpaper',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
         ),
-        
         elevation: 0,
         backgroundColor: Colors.white,
         shadowColor: Colors.black,
         actions: [
           IconButton(
-            onPressed: () async{
-              SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-              sharedPreferences.clear();
+            onPressed: () async {
+              FirebaseAuth.instance.signOut();
               Navigator.of(context).pop(context);
             },
             icon: const Icon(Icons.exit_to_app_rounded),
@@ -65,8 +64,6 @@ class _UploadImageState extends State<UploadImage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 20),
-              DisplayImage(imageURL: displayURL),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -95,49 +92,34 @@ class _UploadImageState extends State<UploadImage> {
                     onChanged: (value) => setState(() {
                       this.value = value;
                       dropDownSelection = value;
-                      print('DropDownSelection: ${dropDownSelection}');
                     }),
                   ),
                 ],
               ),
               const SizedBox(height: 30),
               IconButton(
-                onPressed: () async {
-                  ImagePicker imgPicker = ImagePicker();
-                  XFile? file =
-                      await imgPicker.pickImage(source: ImageSource.gallery);
-                  String uniquePathName =
-                      DateTime.now().millisecondsSinceEpoch.toString();
-                  Reference referenceRoot = FirebaseStorage.instance.ref();
-                  Reference referenceDirImages =
-                      referenceRoot.child('images');
-                  Reference referenceFileImages =
-                      referenceDirImages.child(uniquePathName);
-                  try {
-                    await referenceFileImages.putFile(File(file!.path));
-                    downloadURL =
-                        await referenceFileImages.getDownloadURL();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Kindly wait for atleast 10 seconds before tapping on upload'),
-                    behavior: SnackBarBehavior.floating, backgroundColor: Colors.green));
-                  } catch (error) {
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Make sure that the image has been uploaded to the cloud before tapping on UPLOAD through notification'),
+                    behavior: SnackBarBehavior.floating,backgroundColor: Colors.deepOrange,duration: Duration(seconds: 7),)
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(error.toString()),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+                  );
+                  if(displayImages.isNotEmpty) displayImages.clear();
+                  pickImageAndUpload();
+                  
                 },
                 icon: const Icon(Icons.image_search),
               ),
+              displayImages.isNotEmpty
+                  ? DisplayImage(imageURL: displayImages.last)
+                  : const SizedBox.shrink(),
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () async {
+                  
                   if (downloadURL.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                         content: Text('Please select an image'),
                         behavior: SnackBarBehavior.floating,
                         backgroundColor: Colors.red,
@@ -145,14 +127,29 @@ class _UploadImageState extends State<UploadImage> {
                     );
                     return;
                   }
-                    String itemName = _titleController.text;
-                    if (dropDownSelection == null) return;
-                    Map<String, String> dataToSend = {
-                      'title': itemName,
-                      'imageURL': downloadURL,
-                      'category': dropDownSelection!,
-                    };
-                    _reference.add(dataToSend);
+                  if (_titleController.text.isEmpty || dropDownSelection=='Select' || dropDownSelection!.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Fill the details'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  String itemName = _titleController.text;
+                  if (dropDownSelection == null) return;
+                  Map<String, String> dataToSend = {
+                    'title': itemName,
+                    'imageURL': downloadURL,
+                    'category': dropDownSelection!,
+                  };
+                  _reference.add(dataToSend);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Wallpaper has been added'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.green,));
                 },
                 child: const Text('Upload'),
               ),
@@ -161,6 +158,39 @@ class _UploadImageState extends State<UploadImage> {
         ),
       ),
     );
+  }
+
+  Future<void> pickImageAndUpload() async {
+    ImagePicker imgPicker = ImagePicker();
+    XFile? file =
+        await imgPicker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      displayImages.add(file!.path);
+    });
+    String uniquePathName =
+        DateTime.now().millisecondsSinceEpoch.toString();
+    Reference referenceRoot = FirebaseStorage.instance.ref();
+    Reference referenceDirImages =
+        referenceRoot.child('images');
+    Reference referenceFileImages =
+        referenceDirImages.child(uniquePathName);
+    try {
+      await referenceFileImages.putFile(File(file!.path));
+      String url = await referenceFileImages.getDownloadURL();
+      setState(() {
+        downloadURL=url;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image has been uploaded, kindly fill other details!'),
+      behavior: SnackBarBehavior.floating, backgroundColor: Colors.green));
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   DropdownMenuItem<String> buildMenuItem(String item) => DropdownMenuItem(
@@ -193,9 +223,8 @@ class _DisplayImageState extends State<DisplayImage> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.network(
-          widget.imageURL,
-          key: UniqueKey(), // Add a unique key to force image reload
+        child: Image.file(
+          File(widget.imageURL),
           fit: BoxFit.cover,
         ),
       ),

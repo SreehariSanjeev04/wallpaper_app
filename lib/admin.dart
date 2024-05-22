@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project/uploadimage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class AdminLogin extends StatefulWidget {
   const AdminLogin({Key? key}) : super(key: key);
 
@@ -15,49 +13,38 @@ class _AdminLoginState extends State<AdminLogin> {
   final _formKey = GlobalKey<FormState>();
 
   bool _hidePassword = false;
-
-  Future<void> _checkCredentials() async {
-    if (_emailController.text == 'hello@gmail.com' &&
-        _passwordController.text == 'helloworld') {
-      try {
-        SharedPreferences sharedPreferences =
-            await SharedPreferences.getInstance();
-        sharedPreferences.setString('Email', 'hello@gmail.com');
-        sharedPreferences.setString('Password', 'helloworld');
-        Navigator.of(context)
-            .pushReplacement(MaterialPageRoute(builder: (ctx) => UploadImage()));
-      } catch (e) {
-        print('Error navigating to UploadImage screen: $e');
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Invalid Email/Password'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red,
-      ));
+  Future signinFirebase(String email, String password) async {
+    try{
+      showDialog(context: (context), builder: (context){
+        return const Center(child: CircularProgressIndicator());
+      });
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+      
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error signing in'),behavior: SnackBarBehavior.floating,backgroundColor: Colors.red,)
+      );
+    
     }
+    Navigator.of(context).pop(context);
   }
-
   @override
-  void initState() {
-    super.initState();
-    _loadSavedCredentials();
+  void dispose() {
+    super.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
   }
-
-  Future<void> _loadSavedCredentials() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    if (sharedPreferences.getString('Email') != null &&
-        sharedPreferences.getString('Password') != null) {
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (ctx) => UploadImage()));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: FloatingActionButton(onPressed: (){
+          Navigator.of(context).pop(context);
+        },child: const Icon(Icons.arrow_back_ios_new_rounded),),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
       body: SafeArea(
         child: Stack(
           children: [
@@ -164,7 +151,8 @@ class _AdminLoginState extends State<AdminLogin> {
                       ElevatedButton(
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
-                            _checkCredentials();
+                            _formKey.currentState!.save();
+                            signinFirebase(_emailController.text.trim(), _passwordController.text.trim());
                             setState(() {
                               _emailController.text = '';
                               _passwordController.text = '';

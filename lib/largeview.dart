@@ -12,7 +12,6 @@ class LargeView extends StatefulWidget {
 }
 
 class _LargeViewState extends State<LargeView> {
-  @override
   Future<void> setWallpaperFromFile(int value, String imageURL) async {
     bool result;
     var file = await DefaultCacheManager().getSingleFile(imageURL);
@@ -32,6 +31,7 @@ class _LargeViewState extends State<LargeView> {
     }
     
   }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -41,7 +41,14 @@ class _LargeViewState extends State<LargeView> {
       body: Center(child: 
       Column(
         children: [
-          Image.network(widget.imageURL),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              height: MediaQuery.of(context).size.height*0.7,
+              width: MediaQuery.of(context).size.width*0.9,
+              child: Image.network(widget.imageURL,fit: BoxFit.cover,)
+            
+            )),
           const SizedBox(
             height: 20,
           ),
@@ -51,21 +58,42 @@ class _LargeViewState extends State<LargeView> {
                 title: Text('Confirm'),
                 content: Text('Choose an option'),
                 actions: [
-                  TextButton(onPressed: (){
-                    setWallpaperFromFile(0,widget.imageURL);
-                  }, child: Text('Home Screen')),
-                  TextButton(onPressed: (){
-                    setWallpaperFromFile(1, widget.imageURL);
-                  }, child: Text('Lock Screen')),
-                  TextButton(onPressed: (){
-                    setWallpaperFromFile(2, widget.imageURL);
-                  }, child: Text('Both'))
+                  WallpaperButton(text: 'Home Screen',function: setWallpaperFromFile, imageURL: widget.imageURL, wallpaperNumber: 0),
+                  WallpaperButton(text: 'Lock Screen',function: setWallpaperFromFile, imageURL: widget.imageURL, wallpaperNumber: 1),
+                  WallpaperButton(text: 'Both',function: setWallpaperFromFile, imageURL: widget.imageURL, wallpaperNumber: 2)
                 ],
               );
             });
           }, child: Text('Set as wallpaper'))
         ],
       ),),
+    );
+  }
+}
+class WallpaperButton extends StatelessWidget {
+  final Function(int, String) function;
+  final String imageURL;
+  final int wallpaperNumber;
+  final String text;
+  const WallpaperButton({
+    Key? key,
+    required this.function,
+    required this.imageURL,
+    required this.wallpaperNumber,
+    required this.text
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        function(wallpaperNumber, imageURL);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Wallpaper applied successfully!'),behavior: SnackBarBehavior.floating,backgroundColor: Colors.green,)
+        );
+        Navigator.of(context).pop(context);
+      },
+      child: Text(text), // Provide a child widget here
     );
   }
 }

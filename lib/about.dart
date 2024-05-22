@@ -10,7 +10,7 @@ class aboutUs extends StatelessWidget {
         backgroundColor: Colors.black,
         leading: IconButton(icon:Icon(Icons.arrow_back_ios_new,color: Colors.white,),onPressed: ()=>Navigator.of(context).pop(context),),
       ),
-      body: Center(child: const Column(children: [
+      body: const Center(child: Column(children: [
         SizedBox(height: 30,),
         Padding(
           padding: EdgeInsets.all(8.0),

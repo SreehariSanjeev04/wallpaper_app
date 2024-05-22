@@ -22,9 +22,9 @@ class _getPremiumState extends State<getPremium> {
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          Align(child: Image.network('https://st2.depositphotos.com/28265962/50218/v/600/depositphotos_502180846-stock-video-diamond-icon-with-glitch-art.jpg'),alignment: Alignment.topCenter,),
-          Align(child: Column(children: [
-            const Text('Premium Subscription Allows', style: TextStyle(color: Colors.white),),
+          Image.asset('assets/images/premium_image.jpg'),
+          Column(children: [
+            const Text('Premium Subscription Allows', style: TextStyle(color: Colors.white,fontSize: 20),),
             const ListTile(
               leading: Icon(Icons.check, color: Colors.green,),
               title: Text('Access to premium wallpapers',style: TextStyle(color: Colors.white),),
@@ -33,11 +33,11 @@ class _getPremiumState extends State<getPremium> {
               leading: Icon(Icons.check, color: Colors.green,),
               title: Text('Access to exclusive auto wallpaper settings',style: TextStyle(color: Colors.white),),
             ),
-            Container(
+            SizedBox(
               height: 250,
               width: 250,
               child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                     ),
                     itemCount: prices.length,
@@ -57,8 +57,8 @@ class _getPremiumState extends State<getPremium> {
                 
               ),
             )
-
-          ],),alignment: Alignment.center,)
+          
+          ],)
         ],
       ),
     );

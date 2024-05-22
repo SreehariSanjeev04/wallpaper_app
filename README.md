@@ -1,6 +1,6 @@
-# project
+# WallWonders
 
-A new Flutter project.
+A minimalistic wallpaper app created using Flutter
 
 ## Getting Started
 

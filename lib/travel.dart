@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:project/customdrawer.dart';
+import 'package:project/components/searchbutton.dart';
+import 'package:project/components/customdrawer.dart';
 import 'largeview.dart';
-import 'cardview.dart';
+import 'components/cardview.dart';
 class TravelWallpaper extends StatefulWidget {
     final Future<List<DocumentSnapshot>> data;
   const TravelWallpaper({super.key, required this.data});
@@ -20,31 +22,37 @@ class _TravelWallpaperState extends State<TravelWallpaper> {
         title: const Text('WallWonders',style: TextStyle(color: Colors.black, fontSize: 25, fontWeight: FontWeight.bold),),
         centerTitle: true,
         ),
-      body: FutureBuilder<List<DocumentSnapshot>>(
-        future: widget.data,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          } else {
-            List<DocumentSnapshot>? list = snapshot.data;
-            return ListView.builder(
-              itemCount: list?.length ?? 0,
-              itemBuilder: (context, index) {
-                DocumentSnapshot document = list![index];
-               return GestureDetector(
-
-                onTap: () {Navigator.of(context).push(MaterialPageRoute(builder: (ctx)=>LargeView(imageURL: document['imageURL'], title: document['title'])));},
-                child: CardView(imageURL: document['imageURL'], title: document['title']));
-              },
-            );
-          }
-        },
+      body: Column(
+        children: [
+          CustomSearchBar(data: widget.data),
+          Expanded(
+            child: FutureBuilder<List<DocumentSnapshot>>(
+            future: widget.data,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error: ${snapshot.error}'),
+                );
+              } else {
+                List<DocumentSnapshot>? list = snapshot.data;
+                return ListView.builder(
+                  itemCount: list?.length ?? 0,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot document = list![index];
+                   return GestureDetector(
+                    
+                    onTap: () {Navigator.of(context).push(MaterialPageRoute(builder: (ctx)=>LargeView(imageURL: document['imageURL'], title: document['title'])));},
+                    child: CardView(imageURL: document['imageURL'], title: document['title']));
+                  },
+                );
+              }
+            },
+                    ),
+          ),]
       ),
     );
   }

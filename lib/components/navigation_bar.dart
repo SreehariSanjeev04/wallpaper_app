@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'uploadimage.dart';
-import 'admin.dart';
-import 'travel.dart';
-import 'food.dart';
-import 'wildlife.dart';
+import '../uploadimage.dart';
+import '../admin.dart';
+import '../travel.dart';
+import '../food.dart';
+import '../wildlife.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BottomNavigationPage extends StatefulWidget {

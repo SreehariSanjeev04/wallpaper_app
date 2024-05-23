@@ -43,6 +43,7 @@ dependencies:
   flutter_cache_manager: ^3.3.2
   shared_preferences: ^2.2.3
   firebase_auth: ^4.19.6
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:

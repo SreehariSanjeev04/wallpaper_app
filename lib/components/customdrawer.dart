@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project/loginnavigation.dart';
-import 'about.dart';
-import 'premium.dart';
+import '../about.dart';
+import '../premium.dart';
 class customDrawer extends StatelessWidget {
   const customDrawer({super.key});
 
